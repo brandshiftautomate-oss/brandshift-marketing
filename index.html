@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrandShift — Your Business, Running Itself</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #3b82f6;
+      --blue-dark: #2563eb;
+      --bg: #0a0a0a;
+      --bg2: #0d0d0d;
+      --card: #111111;
+      --border: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.45);
+      --green: #22c55e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /*  NAVBAR  */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; text-decoration: none; }
+    .logo span:first-child { color: #fff; }
+    .logo span:last-child { color: var(--blue); }
+    .nav-links { display: flex; align-items: center; gap: 36px; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 10px;
+      padding: 10px 22px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      font-family: inherit;
+    }
+    .btn:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); }
+    .btn-lg { padding: 16px 36px; font-size: 1.05rem; border-radius: 12px; }
+
+    /*  CLICK-THROUGH NARRATIVE  */
+    #scenes {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Grid background */
+    #scenes::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* Blue center glow */
+    #scenes::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(59,130,246,0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .scene.active { opacity: 1; }
+
+    /* Scene text */
+    .scene-text {
+      position: absolute;
+      bottom: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      width: 90%;
+      max-width: 720px;
+      z-index: 10;
+    }
+    .scene-text h2 {
+      font-size: clamp(1.8rem, 4vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.2;
+      color: #fff;
+    }
+    .scene-text h2 span { color: var(--blue); }
+
+    /* SVG container */
+    .scene-svg {
+      width: 100%;
+      max-width: 1100px;
+      padding: 80px 40px 180px;
+    }
+
+    /* Click/tap hint */
+    .click-hint {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      z-index: 20;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .click-hint-icon {
+      font-size: 1.4rem;
+      animation: tapBounce 1.6s ease-in-out infinite;
+    }
+    @keyframes tapBounce {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.85); opacity: 0.5; }
+    }
+
+    /* Progress dots */
+    .scene-dots {
+      position: absolute;
+      bottom: 14%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .scene-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .scene-dot.active {
+      background: var(--blue);
+      transform: scale(1.3);
+    }
+
+    /* Prev/Next arrows */
+    .scene-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, opacity 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .scene-arrow:hover { background: rgba(59,130,246,0.2); color: #fff; }
+    .scene-arrow.prev { left: 24px; }
+    .scene-arrow.next { right: 24px; }
+    .scene-arrow.hidden { opacity: 0; pointer-events: none; }
+
+    /*  SECTIONS (normal scroll)  */
+    .section {
+      padding: 100px 48px;
+      position: relative;
+      z-index: 1;
+    }
+    .section-label {
+      color: var(--blue);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 1.1rem;
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto 64px;
+      line-height: 1.7;
+    }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+
+    /* Services grid */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .service-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      transition: border-color 0.25s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .service-card:hover {
+      border-color: rgba(59,130,246,0.35);
+      transform: translateY(-3px);
+    }
+    .service-icon {
+      width: 52px; height: 52px;
+      background: rgba(59,130,246,0.12);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+    .service-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .service-card p { color: var(--muted); line-height: 1.65; font-size: 0.95rem; }
+
+    /* How it works */
+    #how-it-works { background: var(--bg2); }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      position: relative;
+    }
+    .step-number {
+      font-size: 3rem;
+      font-weight: 800;
+      color: rgba(59,130,246,0.18);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .step-icon {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .step-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .step-card p { color: var(--muted); line-height: 1.65; font-size: 0.95rem; }
+
+    /* Pricing */
+    .pricing-wrapper { max-width: 520px; margin: 0 auto; }
+    .pricing-card {
+      background: var(--card);
+      border: 2px solid rgba(59,130,246,0.4);
+      border-radius: 28px;
+      padding: 56px 52px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-card::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 200px; height: 200px;
+      background: rgba(59,130,246,0.15);
+      border-radius: 50%;
+      filter: blur(60px);
+    }
+    .pricing-card::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 200px; height: 200px;
+      background: rgba(59,130,246,0.08);
+      border-radius: 50%;
+      filter: blur(60px);
+    }
+    .pricing-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      color: var(--blue);
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+    .pricing-badge-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    .pricing-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
+    .pricing-sub { color: var(--muted); margin-bottom: 28px; font-size: 0.95rem; }
+    .pricing-amount { display: flex; align-items: baseline; gap: 8px; margin-bottom: 36px; }
+    .pricing-amount .amount { font-size: 5rem; font-weight: 800; line-height: 1; }
+    .pricing-amount .period { color: var(--muted); font-size: 1.1rem; }
+    .pricing-features { list-style: none; margin-bottom: 40px; display: flex; flex-direction: column; gap: 14px; }
+    .pricing-features li { display: flex; align-items: center; gap: 12px; font-size: 0.98rem; }
+    .check-wrap {
+      width: 22px; height: 22px; flex-shrink: 0;
+      background: rgba(34,197,94,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .check-wrap svg { width: 12px; height: 12px; color: var(--green); }
+    .pricing-note { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 14px; }
+
+    /* CTA */
+    #cta {
+      background: var(--bg2);
+      text-align: center;
+    }
+    #cta h2 { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 700; margin-bottom: 20px; line-height: 1.15; }
+    #cta h2 span { color: var(--blue); }
+    #cta p { color: var(--muted); font-size: 1.15rem; max-width: 520px; margin: 0 auto 40px; line-height: 1.7; }
+    .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .trust-row { margin-top: 72px; padding-top: 48px; border-top: 1px solid var(--border); }
+    .trust-row p { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
+    .trust-logos { display: flex; gap: 48px; justify-content: center; flex-wrap: wrap; opacity: 0.35; }
+    .trust-logos span { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.5px; }
+
+    /* Footer */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 64px 48px 40px;
+    }
+    .footer-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand p { color: var(--muted); max-width: 280px; line-height: 1.65; margin-top: 12px; font-size: 0.95rem; }
+    .footer-col h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #fff; }
+    .footer-bottom {
+      max-width: 1200px; margin: 0 auto;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-bottom p { color: var(--muted); font-size: 0.85rem; }
+    .social-links { display: flex; gap: 20px; }
+    .social-links a { color: var(--muted); transition: color 0.2s; }
+    .social-links a:hover { color: #fff; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      .section { padding: 72px 24px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      footer { padding: 48px 24px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="logo"><span>Brand</span><span>Shift</span></a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#pricing" class="btn">Get Started</a>
+  </div>
+</nav>
+
+<!-- CLICK-THROUGH SCENES -->
+<div id="scenes">
+
+  <!-- Prev/Next arrows -->
+  <button class="scene-arrow prev hidden" id="btn-prev" onclick="changeScene(-1)">←</button>
+  <button class="scene-arrow next" id="btn-next" onclick="changeScene(1)">→</button>
+
+  <!-- Progress dots -->
+  <div class="scene-dots" id="scene-dots"></div>
+
+  <!-- Click hint -->
+  <div class="click-hint" id="click-hint">
+    <span class="click-hint-icon">&#8595;</span>
+    <span>Tap to explore</span>
+  </div>
+
+  <!-- SCENE 1: Chaos -->
+  <div class="scene" id="scene-1">
+    <svg class="scene-svg" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- Central person -->
+      <g id="s1-person" transform="translate(550,240)">
+        <circle cx="0" cy="-55" r="38" fill="#1a1a1a" stroke="#444" stroke-width="2"/>
+        <ellipse cx="0" cy="38" rx="50" ry="58" fill="#1a1a1a" stroke="#444" stroke-width="2"/>
+        <!-- Stressed lines on face -->
+        <line x1="-14" y1="-68" x2="-10" y2="-62" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+        <line x1="14" y1="-68" x2="10" y2="-62" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+        <path d="M-12 -42 Q0 -48 12 -42" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Sweat drops -->
+        <ellipse cx="28" cy="-62" rx="4" ry="6" fill="#3b82f6" opacity="0.7"/>
+        <ellipse cx="-28" cy="-58" rx="3" ry="5" fill="#3b82f6" opacity="0.5"/>
+      </g>
+
+      <!-- Chaos icons orbiting -->
+      <!-- Email -->
+      <g id="s1-email" transform="translate(300,140)">
+        <rect x="-28" y="-20" width="56" height="40" rx="6" fill="#1a1a1a" stroke="#ef4444" stroke-width="1.5"/>
+        <path d="M-24 -16 L0 2 L24 -16" stroke="#ef4444" stroke-width="1.5" fill="none"/>
+      </g>
+      <!-- Phone -->
+      <g id="s1-phone" transform="translate(750,130)">
+        <rect x="-18" y="-30" width="36" height="60" rx="8" fill="#1a1a1a" stroke="#f59e0b" stroke-width="1.5"/>
+        <circle cx="0" cy="20" r="5" fill="#f59e0b"/>
+        <rect x="-10" y="-22" width="20" height="28" rx="2" fill="#0a0a0a"/>
+      </g>
+      <!-- Sticky note -->
+      <g id="s1-note" transform="translate(310,360)">
+        <rect x="-28" y="-28" width="56" height="56" rx="3" fill="#f59e0b" opacity="0.85"/>
+        <line x1="-18" y1="-14" x2="18" y2="-14" stroke="#0a0a0a" stroke-width="2"/>
+        <line x1="-18" y1="0" x2="10" y2="0" stroke="#0a0a0a" stroke-width="2"/>
+        <line x1="-18" y1="14" x2="14" y2="14" stroke="#0a0a0a" stroke-width="2"/>
+      </g>
+      <!-- Calendar -->
+      <g id="s1-cal" transform="translate(780,370)">
+        <rect x="-28" y="-28" width="56" height="56" rx="5" fill="#1a1a1a" stroke="#ec4899" stroke-width="1.5"/>
+        <rect x="-28" y="-28" width="56" height="16" rx="5" fill="#ec4899"/>
+        <line x1="-14" y1="-36" x2="-14" y2="-20" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="14" y1="-36" x2="14" y2="-20" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="-14" cy="4" r="4" fill="#ec4899"/>
+        <circle cx="0" cy="4" r="4" fill="#ec4899"/>
+        <circle cx="14" cy="4" r="4" fill="#444"/>
+        <circle cx="-14" cy="20" r="4" fill="#444"/>
+        <circle cx="0" cy="20" r="4" fill="#444"/>
+      </g>
+      <!-- Invoice -->
+      <g id="s1-inv" transform="translate(430,100)">
+        <rect x="-24" y="-30" width="48" height="60" rx="4" fill="#1a1a1a" stroke="#8b5cf6" stroke-width="1.5"/>
+        <line x1="-16" y1="-18" x2="16" y2="-18" stroke="#8b5cf6" stroke-width="1.5"/>
+        <line x1="-16" y1="-6" x2="8" y2="-6" stroke="#8b5cf6" stroke-width="1"/>
+        <line x1="-16" y1="4" x2="12" y2="4" stroke="#8b5cf6" stroke-width="1"/>
+        <line x1="-16" y1="14" x2="4" y2="14" stroke="#8b5cf6" stroke-width="1"/>
+      </g>
+      <!-- Clock -->
+      <g id="s1-clock" transform="translate(670,110)">
+        <circle cx="0" cy="0" r="26" fill="#1a1a1a" stroke="#22c55e" stroke-width="1.5"/>
+        <line x1="0" y1="0" x2="0" y2="-16" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+        <line x1="0" y1="0" x2="10" y2="6" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <!-- Chaos connection lines -->
+      <line x1="328" y1="160" x2="512" y2="210" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+      <line x1="722" y1="160" x2="588" y2="210" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+      <line x1="338" y1="340" x2="510" y2="270" stroke="#ec4899" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+      <line x1="752" y1="350" x2="590" y2="270" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+    </svg>
+    <div class="scene-text">
+      <h2>Your business runs on <span>manual work.</span></h2>
+    </div>
+  </div>
+
+  <!-- SCENE 2: Intake -->
+  <div class="scene" id="scene-2">
+    <svg class="scene-svg" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="pipe-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+          <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.3"/>
+        </linearGradient>
+        <filter id="glow2"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- Funnel mouth -->
+      <path d="M180,160 L380,220 L380,260 L180,320 Z" fill="#111" stroke="#3b82f6" stroke-width="1.5" opacity="0.8"/>
+      <text x="280" y="248" text-anchor="middle" fill="#3b82f6" font-size="13" font-family="Space Grotesk" font-weight="600">INTAKE</text>
+
+      <!-- Pipeline tube -->
+      <rect x="380" y="215" width="540" height="50" rx="25" fill="url(#pipe-grad)"/>
+      <rect x="390" y="225" width="520" height="30" rx="15" fill="#0a0a0a" opacity="0.4"/>
+      <!-- Glow on pipe -->
+      <rect x="380" y="232" width="540" height="16" rx="8" fill="#3b82f6" filter="url(#glow2)" opacity="0.5"/>
+
+      <!-- Particles flowing in -->
+      <circle id="p1" cx="200" cy="200" r="8" fill="#ef4444" opacity="0.8"/>
+      <circle id="p2" cx="220" cy="240" r="6" fill="#f59e0b" opacity="0.8"/>
+      <circle id="p3" cx="200" cy="280" r="7" fill="#ec4899" opacity="0.8"/>
+      <circle id="p4" cx="240" cy="220" r="5" fill="#8b5cf6" opacity="0.8"/>
+      <circle id="p5" cx="230" cy="260" r="6" fill="#22c55e" opacity="0.8"/>
+
+      <!-- Output end cap -->
+      <circle cx="946" cy="240" r="32" fill="#111" stroke="#3b82f6" stroke-width="2"/>
+      <text x="946" y="246" text-anchor="middle" fill="#3b82f6" font-size="20" font-family="Space Grotesk" font-weight="700">B</text>
+
+      <!-- Label -->
+      <text x="550" y="310" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="12" font-family="Space Grotesk" letter-spacing="3">ALL INPUTS CAPTURED</text>
+    </svg>
+    <div class="scene-text">
+      <h2>Every task, <span>captured automatically.</span></h2>
+    </div>
+  </div>
+
+  <!-- SCENE 3: Branching -->
+  <div class="scene" id="scene-3">
+    <svg class="scene-svg" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="pg2" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.2"/>
+        </linearGradient>
+        <filter id="node-glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- Input pipe -->
+      <rect x="80" y="215" width="200" height="50" rx="25" fill="url(#pg2)"/>
+
+      <!-- Splitter -->
+      <circle cx="320" cy="240" r="22" fill="#111" stroke="#3b82f6" stroke-width="2.5" filter="url(#node-glow)"/>
+      <text x="320" y="246" text-anchor="middle" fill="#3b82f6" font-size="18" font-weight="700" font-family="Space Grotesk"></text>
+
+      <!-- Branch pipes -->
+      <path d="M342,228 Q500,228 500,120 L680,120" stroke="#3b82f6" stroke-width="8" fill="none" stroke-opacity="0.7" stroke-linecap="round"/>
+      <path d="M342,240 L680,240" stroke="#3b82f6" stroke-width="8" fill="none" stroke-opacity="0.7" stroke-linecap="round"/>
+      <path d="M342,252 Q500,252 500,360 L680,360" stroke="#3b82f6" stroke-width="8" fill="none" stroke-opacity="0.7" stroke-linecap="round"/>
+
+      <!-- Branch glows -->
+      <path d="M342,228 Q500,228 500,120 L680,120" stroke="#3b82f6" stroke-width="3" fill="none" filter="url(#node-glow)" stroke-opacity="0.6" stroke-linecap="round"/>
+      <path d="M342,240 L680,240" stroke="#3b82f6" stroke-width="3" fill="none" filter="url(#node-glow)" stroke-opacity="0.6" stroke-linecap="round"/>
+      <path d="M342,252 Q500,252 500,360 L680,360" stroke="#3b82f6" stroke-width="3" fill="none" filter="url(#node-glow)" stroke-opacity="0.6" stroke-linecap="round"/>
+
+      <!-- Track 1: Website -->
+      <g transform="translate(720,120)">
+        <circle cx="0" cy="0" r="36" fill="#111" stroke="#3b82f6" stroke-width="2" filter="url(#node-glow)"/>
+        <text x="0" y="8" text-anchor="middle" fill="#3b82f6" font-size="22"></text>
+        <text x="0" y="70" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="13" font-family="Space Grotesk" font-weight="600">WEBSITE</text>
+        <!-- Flow dots -->
+        <circle cx="70" cy="0" r="5" fill="#3b82f6" opacity="0.9"/>
+        <circle cx="90" cy="0" r="4" fill="#3b82f6" opacity="0.6"/>
+        <circle cx="108" cy="0" r="3" fill="#3b82f6" opacity="0.35"/>
+      </g>
+
+      <!-- Track 2: Leads -->
+      <g transform="translate(720,240)">
+        <circle cx="0" cy="0" r="36" fill="#111" stroke="#3b82f6" stroke-width="2" filter="url(#node-glow)"/>
+        <text x="0" y="8" text-anchor="middle" fill="#3b82f6" font-size="22"></text>
+        <text x="0" y="70" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="13" font-family="Space Grotesk" font-weight="600">LEADS</text>
+        <circle cx="70" cy="0" r="5" fill="#3b82f6" opacity="0.9"/>
+        <circle cx="90" cy="0" r="4" fill="#3b82f6" opacity="0.6"/>
+        <circle cx="108" cy="0" r="3" fill="#3b82f6" opacity="0.35"/>
+      </g>
+
+      <!-- Track 3: Operations -->
+      <g transform="translate(720,360)">
+        <circle cx="0" cy="0" r="36" fill="#111" stroke="#3b82f6" stroke-width="2" filter="url(#node-glow)"/>
+        <text x="0" y="8" text-anchor="middle" fill="#3b82f6" font-size="22"></text>
+        <text x="0" y="70" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="13" font-family="Space Grotesk" font-weight="600">OPS</text>
+        <circle cx="70" cy="0" r="5" fill="#3b82f6" opacity="0.9"/>
+        <circle cx="90" cy="0" r="4" fill="#3b82f6" opacity="0.6"/>
+        <circle cx="108" cy="0" r="3" fill="#3b82f6" opacity="0.35"/>
+      </g>
+    </svg>
+    <div class="scene-text">
+      <h2>Sorted. Assigned. <span>Automated.</span></h2>
+    </div>
+  </div>
+
+  <!-- SCENE 4: Output / Dashboard -->
+  <div class="scene" id="scene-4">
+    <svg class="scene-svg" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="dash-glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- Converging lines -->
+      <path d="M120,120 Q280,120 280,240 L380,240" stroke="#3b82f6" stroke-width="6" fill="none" stroke-opacity="0.5" stroke-linecap="round"/>
+      <path d="M120,240 L380,240" stroke="#3b82f6" stroke-width="6" fill="none" stroke-opacity="0.5" stroke-linecap="round"/>
+      <path d="M120,360 Q280,360 280,240 L380,240" stroke="#3b82f6" stroke-width="6" fill="none" stroke-opacity="0.5" stroke-linecap="round"/>
+
+      <!-- Converge node -->
+      <circle cx="410" cy="240" r="22" fill="#111" stroke="#3b82f6" stroke-width="2.5" filter="url(#dash-glow)"/>
+      <text x="410" y="247" text-anchor="middle" fill="#3b82f6" font-size="16" font-weight="700" font-family="Space Grotesk">→</text>
+
+      <!-- Dashboard window -->
+      <rect x="470" y="80" width="560" height="320" rx="16" fill="#111" stroke="#222" stroke-width="1.5"/>
+      <!-- Title bar -->
+      <rect x="470" y="80" width="560" height="42" rx="16" fill="#1a1a1a"/>
+      <rect x="470" y="106" width="560" height="16" fill="#1a1a1a"/>
+      <circle cx="496" cy="101" r="7" fill="#ef4444"/>
+      <circle cx="518" cy="101" r="7" fill="#f59e0b"/>
+      <circle cx="540" cy="101" r="7" fill="#22c55e"/>
+      <text x="750" y="106" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="12" font-family="Space Grotesk">BrandShift Dashboard</text>
+
+      <!-- Dashboard rows -->
+      <!-- Row 1 -->
+      <rect x="494" y="142" width="510" height="52" rx="8" fill="#1a1a1a"/>
+      <rect x="510" y="152" width="120" height="8" rx="4" fill="#2a2a2a"/>
+      <rect x="510" y="168" width="80" height="6" rx="3" fill="#222"/>
+      <circle cx="978" cy="168" r="14" fill="rgba(34,197,94,0.15)"/>
+      <text x="978" y="173" text-anchor="middle" fill="#22c55e" font-size="14"></text>
+      <text x="640" y="157" fill="rgba(255,255,255,0.6)" font-size="11" font-family="Space Grotesk">New lead from Google → Logged &amp; assigned</text>
+
+      <!-- Row 2 -->
+      <rect x="494" y="204" width="510" height="52" rx="8" fill="#1a1a1a"/>
+      <rect x="510" y="214" width="100" height="8" rx="4" fill="#2a2a2a"/>
+      <rect x="510" y="230" width="140" height="6" rx="3" fill="#222"/>
+      <circle cx="978" cy="230" r="14" fill="rgba(34,197,94,0.15)"/>
+      <text x="978" y="235" text-anchor="middle" fill="#22c55e" font-size="14"></text>
+      <text x="640" y="219" fill="rgba(255,255,255,0.6)" font-size="11" font-family="Space Grotesk">Follow-up text sent → Awaiting reply</text>
+
+      <!-- Row 3 -->
+      <rect x="494" y="266" width="510" height="52" rx="8" fill="#1a1a1a"/>
+      <rect x="510" y="276" width="140" height="8" rx="4" fill="#2a2a2a"/>
+      <rect x="510" y="292" width="60" height="6" rx="3" fill="#222"/>
+      <circle cx="978" cy="292" r="14" fill="rgba(34,197,94,0.15)"/>
+      <text x="978" y="297" text-anchor="middle" fill="#22c55e" font-size="14"></text>
+      <text x="640" y="281" fill="rgba(255,255,255,0.6)" font-size="11" font-family="Space Grotesk">Invoice generated → Sent automatically</text>
+
+      <!-- Row 4 -->
+      <rect x="494" y="328" width="510" height="52" rx="8" fill="#1a1a1a"/>
+      <rect x="510" y="338" width="90" height="8" rx="4" fill="#2a2a2a"/>
+      <rect x="510" y="354" width="110" height="6" rx="3" fill="#222"/>
+      <circle cx="978" cy="354" r="14" fill="rgba(59,130,246,0.15)"/>
+      <text x="978" y="359" text-anchor="middle" fill="#3b82f6" font-size="11"></text>
+      <text x="640" y="343" fill="rgba(255,255,255,0.6)" font-size="11" font-family="Space Grotesk">Website deployed → brandshift.io/client</text>
+    </svg>
+    <div class="scene-text">
+      <h2>Everything handled. <span>Nothing missed.</span></h2>
+    </div>
+  </div>
+
+  <!-- SCENE 5: Result -->
+  <div class="scene" id="scene-5">
+    <svg class="scene-svg" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="owner-glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Aura -->
+      <ellipse cx="380" cy="240" rx="160" ry="160" fill="url(#aura)"/>
+
+      <!-- Relaxed person -->
+      <g transform="translate(380,240)">
+        <circle cx="0" cy="-55" r="40" fill="#111" stroke="#3b82f6" stroke-width="2.5" filter="url(#owner-glow)"/>
+        <ellipse cx="0" cy="42" rx="52" ry="60" fill="#111" stroke="#3b82f6" stroke-width="2"/>
+        <!-- Happy eyes -->
+        <circle cx="-14" cy="-62" r="5" fill="#3b82f6"/>
+        <circle cx="14" cy="-62" r="5" fill="#3b82f6"/>
+        <!-- Smile -->
+        <path d="M-16 -42 Q0 -30 16 -42" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Arms up -->
+        <line x1="-52" y1="10" x2="-80" y2="-30" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>
+        <line x1="52" y1="10" x2="80" y2="-30" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>
+      </g>
+
+      <!-- Phone -->
+      <g transform="translate(560,230)">
+        <rect x="-36" y="-72" width="72" height="144" rx="14" fill="#111" stroke="#3b82f6" stroke-width="2"/>
+        <rect x="-28" y="-62" width="56" height="110" rx="6" fill="#0d0d0d"/>
+        <circle cx="0" cy="62" r="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+        <!-- Notification banner -->
+        <rect x="-24" y="-52" width="48" height="52" rx="6" fill="#1a1a1a"/>
+        <rect x="-20" y="-48" width="40" height="8" rx="4" fill="#3b82f6"/>
+        <rect x="-20" y="-34" width="30" height="5" rx="2.5" fill="#333"/>
+        <rect x="-20" y="-24" width="36" height="5" rx="2.5" fill="#2a2a2a"/>
+        <rect x="-20" y="-14" width="20" height="5" rx="2.5" fill="#222"/>
+        <!-- Notification badge -->
+        <circle cx="28" cy="-62" r="12" fill="#22c55e"/>
+        <text x="28" y="-57" text-anchor="middle" fill="#fff" font-size="13" font-weight="700" font-family="Space Grotesk">1</text>
+      </g>
+
+      <!-- Stats floating -->
+      <g transform="translate(780,140)">
+        <rect x="-60" y="-30" width="120" height="60" rx="12" fill="#111" stroke="rgba(59,130,246,0.3)" stroke-width="1"/>
+        <text x="0" y="-8" text-anchor="middle" fill="#22c55e" font-size="20" font-weight="800" font-family="Space Grotesk">+340%</text>
+        <text x="0" y="16" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="11" font-family="Space Grotesk">leads this month</text>
+      </g>
+      <g transform="translate(800,340)">
+        <rect x="-60" y="-30" width="120" height="60" rx="12" fill="#111" stroke="rgba(59,130,246,0.3)" stroke-width="1"/>
+        <text x="0" y="-8" text-anchor="middle" fill="#3b82f6" font-size="20" font-weight="800" font-family="Space Grotesk">40 hrs</text>
+        <text x="0" y="16" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="11" font-family="Space Grotesk">saved per week</text>
+      </g>
+
+      <!-- BrandShift wordmark -->
+      <text x="550" y="440" text-anchor="middle" font-size="15" font-family="Space Grotesk" font-weight="800" letter-spacing="2">
+        <tspan fill="#fff">BRAND</tspan><tspan fill="#3b82f6">SHIFT</tspan>
+      </text>
+    </svg>
+    <div class="scene-text">
+      <h2>Your business, <span>running itself.</span></h2>
+    </div>
+  </div>
+
+</div><!-- end #scenes -->
+
+<!--  SERVICES  -->
+<section class="section" id="services">
+  <div class="section-inner">
+    <span class="section-label">Services</span>
+    <h2 class="section-title">Everything your business needs<br>to run on autopilot</h2>
+    <p class="section-sub">We don't just automate tasks — we transform how your entire business operates.</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <h3>Website Automation</h3>
+        <p>Capture leads, schedule appointments, and respond to inquiries automatically — 24/7.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg></div>
+        <h3>Lead Management</h3>
+        <p>Every lead tagged, scored, and routed to the right person instantly. Never lose a prospect again.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>Operations Workflows</h3>
+        <p>From invoicing to follow-ups, we build custom workflows that eliminate repetitive tasks.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>AI Assistants</h3>
+        <p>Deploy intelligent chatbots that answer questions, qualify leads, and book meetings.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <h3>Reporting & Analytics</h3>
+        <p>Real-time dashboards that show you exactly what's working and where to improve.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v6M12 13l-5 4M12 13l5 4"/></svg></div>
+        <h3>Integration Hub</h3>
+        <p>Connect all your tools — CRM, email, calendar, payments — into one seamless system.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--  HOW IT WORKS  -->
+<section class="section" id="how-it-works">
+  <div class="section-inner">
+    <span class="section-label">How It Works</span>
+    <h2 class="section-title">From chaos to clarity in 4 steps</h2>
+    <p class="section-sub">Our proven process gets you results fast without disrupting your current operations.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <span class="step-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <h3>Discovery Call</h3>
+        <p>We dive deep into your business to understand your pain points, goals, and current processes.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <span class="step-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+        <h3>Custom Blueprint</h3>
+        <p>We design a tailored automation strategy that fits your unique workflow and tech stack.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <span class="step-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+        <h3>Build & Launch</h3>
+        <p>Our team builds, tests, and deploys your automations — usually within 2–4 weeks.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <span class="step-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <h3>Ongoing Support</h3>
+        <p>We monitor, optimize, and scale your systems as your business grows.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--  PRICING  -->
+<section class="section" id="pricing">
+  <div class="section-inner">
+    <span class="section-label">Pricing</span>
+    <h2 class="section-title">Simple pricing. Massive results.</h2>
+    <p class="section-sub">No hidden fees. No long-term contracts. Just automation that pays for itself.</p>
+    <div class="pricing-wrapper">
+      <div class="pricing-card">
+        <div class="pricing-badge">
+          <div class="pricing-badge-dot"></div>
+          Most Popular
+        </div>
+        <div class="pricing-title">Growth Plan</div>
+        <div class="pricing-sub">Everything you need to automate your business</div>
+        <div class="pricing-amount">
+          <span class="amount">$97</span>
+          <span class="period">/month</span>
+        </div>
+        <ul class="pricing-features">
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Custom business website</li>
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Automated lead generation</li>
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>CRM & follow-up automation</li>
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Reporting dashboard</li>
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Email & text integrations</li>
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Hosting & maintenance</li>
+          <li><div class="check-wrap"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Priority support</li>
+        </ul>
+        <a href="STRIPE_LINK_HERE" class="btn btn-lg" style="width:100%;display:flex;">Start for $97/month</a>
+        <p class="pricing-note">No credit card required to get started.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--  CTA  -->
+<section class="section" id="cta">
+  <div class="section-inner" style="text-align:center">
+    <h2>Ready to stop working <span style="color:var(--blue)">in</span> your business?</h2>
+    <p>Join businesses who've reclaimed their time with BrandShift automation.</p>
+    <div class="cta-buttons">
+      <a href="STRIPE_LINK_HERE" class="btn btn-lg">Get Your Free Automation Audit →</a>
+      <a href="tel:PHONE_HERE" class="btn btn-lg btn-outline">Schedule a Demo</a>
+    </div>
+    <div class="trust-row">
+      <p>Trusted by businesses across the US</p>
+      <div class="trust-logos">
+        <span>TechFlow</span><span>Scalr</span><span>Nexus</span><span>Quantix</span><span>Vantage</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--  FOOTER  -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="#" class="logo"><span>Brand</span><span>Shift</span></a>
+      <p>We help businesses automate their operations so they can focus on growth, not grunt work.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#">Case Studies</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 BrandShift. All rights reserved.</p>
+    <div class="social-links">
+      <a href="#" aria-label="Twitter">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="#" aria-label="LinkedIn">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const scenes = document.querySelectorAll('.scene');
+  const totalScenes = scenes.length;
+  let current = 0;
+  let isAnimating = false;
+
+  // Build dots
+  const dotsContainer = document.getElementById('scene-dots');
+  scenes.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'scene-dot' + (i === 0 ? ' active' : '');
+    dotsContainer.appendChild(dot);
+  });
+
+  function goToScene(index) {
+    if (isAnimating || index === current) return;
+    if (index < 0 || index >= totalScenes) return;
+    isAnimating = true;
+
+    const prev = current;
+    current = index;
+
+    // Fade out old
+    gsap.to(scenes[prev], { opacity: 0, duration: 0.4, ease: 'power2.in' });
+    // Fade in new
+    gsap.fromTo(scenes[current],
+      { opacity: 0 },
+      { opacity: 1, duration: 0.5, ease: 'power2.out', delay: 0.2, onComplete: () => { isAnimating = false; } }
+    );
+
+    // Update dots
+    document.querySelectorAll('.scene-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+
+    // Update arrows
+    document.getElementById('btn-prev').classList.toggle('hidden', current === 0);
+    document.getElementById('btn-next').classList.toggle('hidden', current === totalScenes - 1);
+
+    // Hide hint after first advance
+    if (current > 0) {
+      gsap.to('#click-hint', { opacity: 0, duration: 0.4 });
+    }
+  }
+
+  function changeScene(dir) {
+    goToScene(current + dir);
+  }
+
+  // Initialize — show scene 1
+  gsap.set(scenes[0], { opacity: 1 });
+  scenes.forEach((s, i) => { if (i > 0) gsap.set(s, { opacity: 0 }); });
+
+  // Click on scenes area to advance
+  document.getElementById('scenes').addEventListener('click', (e) => {
+    // Don't trigger if clicking arrows
+    if (e.target.closest('.scene-arrow')) return;
+    changeScene(1);
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      changeScene(1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      changeScene(-1);
+    }
+  });
+
+  // Swipe support
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.getElementById('scenes').addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.getElementById('scenes').addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      changeScene(dx < 0 ? 1 : -1);
+    } else if (Math.abs(dy) > 40) {
+      changeScene(dy < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  // Animate sections on scroll into view
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => {
+          gsap.fromTo(e.target, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6 });
+        }, i * 80);
+        revealObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.service-card, .step-card').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
